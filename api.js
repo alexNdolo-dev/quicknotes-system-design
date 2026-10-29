@@ -140,3 +140,42 @@ form.addEventListener("submit", async (event) => {
     submitBtn.disabled = false;
   }
 });
+
+
+// ========== DELETE: remove a note ==========
+
+/*
+  NOTE about JSONPlaceholder: it is a practice API, so it does NOT really
+  store the notes we create or really remove the notes we delete. A new note
+  always comes back with id 101, and DELETE answers "success" for any id.
+  Our approach: when the server answers with a success status, we trust it
+  and remove the note from the page. A real QuickNotes backend would save
+  the change, so the note would also be gone after a refresh.
+*/
+function deleteNote(id) {
+  return request(`${API_URL}/${id}`, { method: "DELETE" });
+}
+
+function addDeleteButton(li, note) {
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "delete-btn";
+  del.textContent = "Delete";
+  del.addEventListener("click", () => handleDelete(note.id, li, del));
+  li.appendChild(del);
+}
+
+async function handleDelete(id, item, button) {
+  button.disabled = true;
+  setStatus("Deleting note...", "");
+  try {
+    await deleteNote(id);
+    item.remove();
+    if (list.children.length === 0) showEmptyState();
+    setStatus("Note deleted.", "success");
+  } catch (error) {
+    setStatus("Could not delete the note. Please try again.", "error");
+    console.error(error);
+    button.disabled = false;
+  }
+}
