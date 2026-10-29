@@ -92,3 +92,51 @@ loadBtn.addEventListener("click", loadNotes);
 
 // Show the empty state when the page first opens.
 showEmptyState();
+
+
+// ========== POST: create a note ==========
+
+// Returns an error message, or "" when the title is fine.
+function validateTitle(title) {
+  if (title === "") return "Please enter a title.";
+  if (title.length > 100) return "The title must be 100 characters or fewer.";
+  return "";
+}
+
+function createNote(title, body) {
+  return request(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title: title, body: body, userId: 1 }),
+  });
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const title = titleInput.value.trim();
+  const body = bodyInput.value.trim();
+
+  const problem = validateTitle(title);
+  if (problem) {
+    setStatus(problem, "error");
+    return;
+  }
+
+  submitBtn.disabled = true;
+  setStatus("Saving note...", "");
+  try {
+    const result = await createNote(title, body);
+    removeEmptyState();
+    list.prepend(createNoteItem(result.data)); // newest note on top
+    setStatus(
+      `Note created (status ${result.status}, id ${result.data.id}).`,
+      "success"
+    );
+    form.reset();
+  } catch (error) {
+    setStatus("Could not create the note. Please try again.", "error");
+    console.error(error);
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
